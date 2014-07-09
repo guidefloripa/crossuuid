@@ -1,0 +1,41 @@
+project(crossuuid C)
+cmake_minimum_required(VERSION 2.8)
+
+list(APPEND crossuuid_sources crossuuid.c)
+list(APPEND crossuuid_headers crossuuid.h)
+set(crossuuid_deps)
+
+if (WIN32)
+	add_definitions(-DHAVE_WINDOWS)
+	list(APPEND crossuuid_deps ole32)
+elseif (APPLE)
+	add_definitions(-DHAVE_APPLE)
+	find_library(CORE_FOUNDATION CoreFoundation)
+	mark_as_advanced(CORE_FOUNDATION)
+	list(APPEND crossuuid_deps ${CORE_FOUNDATION})
+else ()
+	list(APPEND CMAKE_MODULE_PATH ${crossuuid_SOURCE_DIR})
+	find_package(uuid)
+	if (UUID_FOUND)
+		add_definitions(-DHAVE_LIBUUID)
+		list(APPEND CMAKE_MODULE_PATH ${UUID_INCLUDE_DIRS})
+		list(APPEND crossuuid_deps ${UUID_LIBRARIES})
+	else ()
+		message(FATAL_ERROR "No UUID backend found")
+	endif ()
+endif ()
+
+add_library(crossuuid SHARED ${crossuuid_sources})
+add_library(crossuuid-static STATIC ${crossuuid_sources})
+
+target_link_libraries(crossuuid ${crossuuid_deps})
+target_link_libraries(crossuuid-static ${crossuuid_deps})
+
+install(TARGETS crossuuid crossuuid-static DESTINATION lib)
+install(FILES ${crossuuid_headers} DESTINATION include)
+
+enable_testing()
+add_executable(test_crossuuid test_crossuuid.c)
+target_link_libraries(test_crossuuid crossuuid)
+
+add_test(test_crossuuid test_crossuuid)
