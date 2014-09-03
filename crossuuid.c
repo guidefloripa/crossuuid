@@ -208,7 +208,7 @@ void _generate_uuid_bytes(crossuuid_t data)
 {
 	uuid_t id;
 	uuid_generate(id);
-	memcpy(data, id, sizeof(uuid_data));
+	memcpy(data, id, sizeof(uuid_t));
 }
 #endif
 
